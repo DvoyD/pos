@@ -1,5 +1,8 @@
 #include<stdio.h>
 
+//Section to initialize functions
+void clearConsole();
+
 void main()
  {
      char ch;
@@ -31,11 +34,13 @@ void main()
              }
              printf("Want to continue Y/N: \n");
              scanf("%s",&ch);
-      }while (ch=='y'|| ch=='Y');
-      
+      }while (ch=='y'|| ch=='Y');      
 
 }
-
   
-  
-
+void clearConsole()
+{
+printf("\e[1;1H\e[2J");
+//This pushes everything to the top of the console out of view
+//However one can still revisit what they did by scrolling up in the terminal
+}
