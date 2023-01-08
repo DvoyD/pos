@@ -44,11 +44,13 @@ void fileManagement();//To create files needed for the program
 int checkItem(int code);//To check whether an item exists
 int getNumItems();//To get the number of items in the inventory
 void viewItem();//To allow the user to see just one specific item from the inventory
+void openReceipts();//To open receipts menu
 void createsales();//To make sales in the program
 float getPrice(int code);//To get the price of a certain item from the data file
 void printItem(int code);//To get the name of the product from the item code
 void updateSales(int, int);//Function to reduce number of items in stoc once they are sold
 void viewReceipt();//To view items in the receipt
+void viewReceipts();//To view all receipts
 
 //Main function where the program begins execution
 void main()
@@ -77,7 +79,8 @@ void main()
               case 3:
               break;
               case 4:
-                  viewReceipt();
+                  clearConsole();
+                  openReceipts();
               break;
               case 5:
               break;
@@ -661,6 +664,63 @@ void viewReceipt()
             viewReceipt();
         }
     }
+}
+
+void openReceipts()
+{
+    char ch;
+    int choice;
+
+    printf("Receipts:\n");
+    printf("1.Search receipt by code\n");
+    printf("2.View all receipts\n");
+    printf("3.Back\n");
+    scanf("%d", &choice);
+
+    switch(choice) {
+        case 1:
+            viewReceipt();
+            break;
+        case 2:
+            viewReceipts();
+            break;
+        case 3:
+            clearConsole();
+            break;
+        default:
+            printf("Invalid choice! Please try again.");
+            clearConsole();
+            break;
+    }
+    printf("\n");
+}
+
+void viewReceipts()
+{
+    fileManagement();//To make sure that there is a file to read
+    clearConsole();
+    struct receipts currentReceipt;
+    FILE *receiptFile=fopen("receipts.dat","r");
+    printf("\t\t RECIEPTS \n");
+    if(getNumItems() < 1) {
+        printf("No receipts generated so far. \n");
+    } else {
+        while(fread(&currentReceipt, sizeof(struct receipts), 1, receiptFile)) {
+            printf("##################\n");
+            printf("Receipt Code:%s\n",currentReceipt.receiptCode);
+            printf("Item Code:%d\n",currentReceipt.itemCode);
+            printf("Amount:%d\n",currentReceipt.amount);
+            printf("Item:");
+            printItem(currentReceipt.itemCode);
+            printf("\t");
+            printf("Total: %.2f \n",getPrice(currentReceipt.itemCode)*currentReceipt.amount);
+        }
+    }
+    fclose(receiptFile);
+    getchar();
+    char choice;
+    scanf("%c", &choice);
+    clearConsole();
 }
 
 void updateSales(int itemCode,int quantity)
