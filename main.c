@@ -772,6 +772,63 @@ void viewReceipts()
     clearConsole();
 }
 
+void openReceipts()
+{
+    char ch;
+    int choice;
+
+    printf("Receipts:\n");
+    printf("1.Search receipt by code\n");
+    printf("2.View all receipts\n");
+    printf("3.Back\n");
+    scanf("%d", &choice);
+
+    switch(choice) {
+        case 1:
+            viewReceipt();
+            break;
+        case 2:
+            viewReceipts();
+            break;
+        case 3:
+            clearConsole();
+            break;
+        default:
+            printf("Invalid choice! Please try again.");
+            clearConsole();
+            break;
+    }
+    printf("\n");
+}
+
+void viewReceipts()
+{
+    fileManagement();//To make sure that there is a file to read
+    clearConsole();
+    struct receipts currentReceipt;
+    FILE *receiptFile=fopen("receipts.dat","r");
+    printf("\t\t RECIEPTS \n");
+    if(getNumItems() < 1) {
+        printf("No receipts generated so far. \n");
+    } else {
+        while(fread(&currentReceipt, sizeof(struct receipts), 1, receiptFile)) {
+            printf("##################\n");
+            printf("Receipt Code:%s\n",currentReceipt.receiptCode);
+            printf("Item Code:%d\n",currentReceipt.itemCode);
+            printf("Amount:%d\n",currentReceipt.amount);
+            printf("Item:");
+            printItem(currentReceipt.itemCode);
+            printf("\t");
+            printf("Total: %.2f \n",getPrice(currentReceipt.itemCode)*currentReceipt.amount);
+        }
+    }
+    fclose(receiptFile);
+    getchar();
+    char choice;
+    scanf("%c", &choice);
+    clearConsole();
+}
+
 void updateSales(int itemCode,int quantity)
 {
     //To reduce the number of items left
