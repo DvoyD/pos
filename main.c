@@ -1,3 +1,33 @@
+    /**
+        POS TERMINAL AND INVENTORY SYSTEM
+
+        This is a simple POS(Point of sale terminal software written entirely in the C programming language
+
+        It has all the necessary functionality for any small to medium sized business
+        It has the following capabilities
+        Inventory management
+
+        -Adding items
+        -Removing items
+        -Restocking
+        -Viewing inventory
+
+        Sales
+
+        -Just like in a retailer or shop, the program automates book-keeping for the user including updating stocks
+         and revenue whenever an item is purchased
+        -This also includes calculating balance for a customer when they pay
+
+        Receipt generation
+
+        -Receipts are automatically generated and stored to keep a record of each customer's purchases
+        -Receipt viewing is also a part of the program
+        Sales statistics/Reports
+        -Best selling item
+        -Revenue generated
+
+    **/
+
 #include<stdio.h>
 #include<stdlib.h>
 #include <time.h>
@@ -14,7 +44,7 @@ float price;
 int amount;
 float buyingPrice;
 }items;
-
+//structure that will hold receipts
 typedef struct receipts{
 char receiptCode[100];
 int itemCode;
@@ -22,8 +52,7 @@ int amount;
 float price;
 float total;
 } receipts;
-
-
+//Structure that will hold sales
 typedef struct sales{
 int itemCode;
 float price;
@@ -48,13 +77,20 @@ void openReceipts();//To open receipts menu
 void createsales();//To make sales in the program
 float getPrice(int code);//To get the price of a certain item from the data file
 void printItem(int code);//To get the name of the product from the item code
-void updateSales(int, int);//Function to reduce number of items in stoc once they are sold
+void updateSales(int, int);//Function to reduce number of items in stock once they are sold
 void viewReceipt();//To view items in the receipt
 void viewReceipts();//To view all receipts
+void reports();//To show statistics of sales in the Business
+void getRevenue();//To show how much profit has been made
+float getBuyingPrice(int itemCode);//To get the buying price of the item
+void showSales();//Function that shows items sold so far
+void bestSelling();// show item that has sold the most units
+void restockAlerts();//To alert user to restock in case of low stock
 
 //Main function where the program begins execution
 void main()
  {
+     //Menu that will be iterated through when program runs
      char ch;
      int choice;
       do {
@@ -63,7 +99,6 @@ void main()
              printf("2.Stock Management\n");
              printf("3.Reports\n");
              printf("4.Receipts\n");
-             printf("5.Settings\n");
              scanf("%d",&choice);
 
              switch(choice)
@@ -77,12 +112,12 @@ void main()
                   stockManagement();
               break;
               case 3:
+                  clearConsole();
+                  reports();
               break;
               case 4:
                   clearConsole();
                   openReceipts();
-              break;
-              case 5:
               break;
               default:
               printf("Invalid choice.Please Try Again.\n");
@@ -90,7 +125,7 @@ void main()
              printf("Want to continue Y/N: \n");
              scanf("%s",&ch);
              clearConsole();
-      }while (ch=='y'|| ch=='Y');
+      }while (ch=='y'|| ch=='Y');//To ask user whether they want to continue
 
 }
 
@@ -107,7 +142,7 @@ void clearConsole()
         system("cls");
     #endif
 }
-
+//Shows the menu for the stock management system
 void stockManagement()
 {
     fileManagement();//To create all needed files if they are not present
@@ -149,7 +184,7 @@ void stockManagement()
     }
     printf("\n");
 }
-
+//function to add restocking amounts to store
 void updateStocks()
 {
  //This is the section to update the number of items of a particular type
@@ -203,8 +238,18 @@ void updateStocks()
  }
  else{
     if(numItems>=1){
-    printf("The Item code does not exist. Please try again \n");
+    printf("The Item code does not exist. Retry? y/n \n");
+    getchar();
+    char retry;
+    scanf("%c",&retry);
+    if(retry=='y' || retry=='Y')
+    {
     updateStocks();
+    }
+    else{
+        stockManagement();
+        clearConsole();
+    }
     }
     else{
         clearConsole();
@@ -214,7 +259,7 @@ void updateStocks()
  }
  fclose(fp);
 }
-
+//function to remove items from the inventory based on item code
 void removeItems()
 {
  //This is the section to remove the items of a particular type
@@ -285,7 +330,7 @@ void removeItems()
  }
  fclose(fp);
 }
-
+//to add items to the inventory
 void addItems()
 {
   char addchoice='y';
@@ -311,27 +356,27 @@ void addItems()
   printf("Number of piece(S) \n");
   scanf("%d",&itemToBeAdded.amount);
   printf("Please choose 1 option \n 1.Set Unit price \n 2.Set profit margin \n");
-
+  //To choose how the selling price of the item will be determined
   int priceChoice;
   scanf("%d",&priceChoice);
-
+  //Variables to store selling data
   float profitMargin;
   float unitPrice;
-
-  int choiceSet=0;
+  int choiceSet=0;//Variable used to determine whether the user's choice has been set
   while(choiceSet!=1)
   {
       switch(priceChoice)
       {
-      case 1:
+      case 1://User sets a fixed price
           printf("Enter Unit price \n");
           scanf("%f",&unitPrice);
           itemToBeAdded.price=unitPrice;
           choiceSet=1;
       break;
-      case 2:
+      case 2://User sets a percentage profit from which the selling price is calculated
           printf("Enter profit margin (percentage) \n");
           scanf("%f",&profitMargin);
+          //SellingPrice=((%profit)+(100%))*currentPrice
           itemToBeAdded.price=((profitMargin/100)+1)*((itemToBeAdded.buyingPrice)/(itemToBeAdded.amount));
           choiceSet=1;
       break;
@@ -363,7 +408,7 @@ void addItems()
   clearConsole();
   stockManagement();
 }
-
+//To check whether needed files are available
 void fileManagement()
 {
     FILE *file1=fopen("stock.dat","r");
@@ -376,14 +421,14 @@ void fileManagement()
     if(file3==NULL){ file3=fopen("sales.dat","w");}
     fclose(file3);
 }
-
+//To check how many items are in the inventory
 int getNumItems()
 {
     char filename[]="stock.dat";
     FILE *fp=fopen(filename,"r");
     if(fp==NULL)
     {
-        printf("File not found");
+        printf("File not found");//In case item does not exist
     }
     struct items myStock;
     int num=0;
@@ -394,7 +439,7 @@ int getNumItems()
     fclose(fp);
     return num;
 }
-
+//To check if item exists
 int checkItem(int code)
 {
     char filename[]="stock.dat";
@@ -415,11 +460,11 @@ int checkItem(int code)
     fclose(fp);
     return status;
 }
-
+//To show the items in the store
 void viewInventory()
 {
     fileManagement();//To make sure that there is a file to read
-    clearConsole();
+    clearConsole();//Refresh screen
     struct items currentItem;
     FILE *fp=fopen("stock.dat","r");
     printf("\t\t INVENTORY \n");
@@ -445,7 +490,7 @@ void viewInventory()
     clearConsole();
     stockManagement();
 }
-
+//To show just one item
 void viewItem()
 {
     printf("Enter the item code: \n");
@@ -458,7 +503,7 @@ void viewItem()
     FILE *fp=fopen("stock.dat","r");
     while(fread(&currentItem,sizeof(struct items),1,fp))
     {
-        if(currentItem.itemCode==code)
+        if(currentItem.itemCode==code)//If entered code matches the one in the inventory
         {
            printf("##################\n");
            printf("Item Code:%d\n",currentItem.itemCode);
@@ -487,13 +532,14 @@ void viewItem()
     clearConsole();
     stockManagement();
 }
-
+//To make sales
 void createsales()
 {
+          //Static variables have been used in case the user faults or decides to change their purchase e.g replaces an item
           static float total=0.00;
           static int itemNum=0;
           srand(time(NULL));//Seed the random number generator
-          //struct to store data for receipts
+          //structure to store data for receipts
           time_t currentTime;
           struct tm *localTime;
           time(&currentTime);// Get the current time
@@ -503,7 +549,7 @@ void createsales()
           int year  = localTime->tm_year + 1900;
           //
           FILE *fp=fopen("receipts.dat","a+");
-          //
+          //Create strings from the current date and time to generate receipt
           char nday[2];
           sprintf(nday,"%d",day);
           char nyear[4];
@@ -511,7 +557,7 @@ void createsales()
           char nmonth[2];
           sprintf(nmonth,"%d",month);
         //
-        struct items *receiptList=malloc(1*sizeof(struct items));
+        struct items *receiptList=malloc(1*sizeof(struct items));//To create a dynamic array to store items sold
         //Function to make sales in the POS
         int itemcode;
         int quantity;
@@ -523,20 +569,18 @@ void createsales()
         scanf("%d",&itemcode);
         if(checkItem(itemcode)==1){
         itemNum++;
-        receiptList=realloc(receiptList,itemNum* sizeof(struct items));
+        receiptList=realloc(receiptList,itemNum* sizeof(struct items));//To reallocate memory when items are added
         printItem(itemcode);
         printf("\n");
         price=getPrice(itemcode);
         printf("Enter the quantity bought\n");
         scanf("%d",&quantity);
         float due=quantity*price;
-        //To reduce amount in inventory as the items are sold and also increase amount sold
-        updateSales(itemcode,quantity);
         //To add the current item to the generated receipt
         receiptList[itemNum-1].itemCode=itemcode;
         receiptList[itemNum-1].amount=quantity;
         //
-        total+=due;
+        total+=due;//To add the amount the customer should pay
         printf("Price:%.2f\t Piece(s):%d\t Amount:%.2f \n",price,quantity,due);
         printf("Add item? y/n \n");
         getchar();
@@ -556,7 +600,7 @@ void createsales()
             }
         }
         }
-        if(total>0 && itemNum>=1){
+        if(total>0 && itemNum>=1){//To make sure a sales has actually happened
         //Code to generate receipt details
         //Receipt structure is d-m-y-random-totalAmount-numItems
         char namount[10];
@@ -565,8 +609,8 @@ void createsales()
         sprintf(nitems,"%d",itemNum);
         char random[5];
         sprintf(random,"%d",rand());
-        char *receiptCode=malloc(sizeof(nyear)+sizeof(nmonth)+sizeof(nday)+sizeof(namount)+sizeof(random)+sizeof(nitems)+1);
-        sprintf(receiptCode,"%s%s%s%s%s%s",nday,nmonth,nyear,random,namount,nitems);
+        char *receiptCode=malloc(sizeof(nyear)+sizeof(nmonth)+sizeof(nday)+sizeof(namount)+sizeof(random)+sizeof(nitems)+1);//To allocate memory for code
+        sprintf(receiptCode,"%s%s%s%s%s%s",nday,nmonth,nyear,random,namount,nitems);//To create and merge receipt code
         clearConsole();
         printf("\t\t Receipt Code: %s \n",receiptCode);
         //To print each item bought
@@ -579,11 +623,43 @@ void createsales()
             printf("\t Total:%.2f \n",getPrice(receiptList[i].itemCode)*receiptList[i].amount);
         }
         printf("Net Total: %.2f \n",total);
-        //Section to store receipt in a data file
+        //Cash register section
+        //To ask for cash tendered
+        float cashReceived,balance;
+        char settled='n';
+        char cancelled='n';
+        while(settled=='n'){
+        float cashReceived;
+        printf("Enter amount received:   ");
+        scanf("%f",&cashReceived);
+        if(cashReceived==0.00)//0 received is a magic value to cancel the transaction
+        {
+            printf("Transaction canceled!");
+            settled='y';
+            cancelled='y';//To show transaction was cancelled
+            getchar();
+        }
+        else{
+        balance=cashReceived-total;
+        if(balance>=0)
+        {
+            printf("Balance: %.2f \n",balance);
+            settled='y';
+        }
+        else{
+            printf("Amount not sufficient! \n");
+        }
+        }
+        }
+        //Section to store receipt in a data file if transaction is sucessful
         //To write data to the files
         struct receipts receipt;
+        if(settled=='y' && cancelled=='n'){
         for(int j=0;j<itemNum;j++)
         {
+            //To reduce amount in inventory as the items are sold and also increase amount sold
+            updateSales(receiptList[j].itemCode,receiptList[j].amount);
+            //The part that writes it to a file
             strcpy(receipt.receiptCode,receiptCode);
             receipt.itemCode=receiptList[j].itemCode;
             receipt.amount=receiptList[j].amount;
@@ -595,13 +671,27 @@ void createsales()
         total=0.00;
         itemNum=0;
         }
+        else{
+        total=0.00;
+        itemNum=0;
+        }
+        }
         fclose(fp);
         free(receiptList);
+        printf("Make another sale ? y/n");
+        char choice;
+        getchar();
+        scanf("%c",&choice);
+        if(choice=='y' || choice=='Y')
+        {
+            clearConsole();
+            createsales();
+        }
 }
-
+//To get price of certain item
 float getPrice(int code)
 {
-    int price;
+    float price;
     struct items currentItem;
     FILE *fp=fopen("stock.dat","r");
     while(fread(&currentItem,sizeof(struct items),1,fp))
@@ -614,7 +704,7 @@ float getPrice(int code)
     fclose(fp);
     return price;
 }
-
+//To write item of certain code in the screen
 void printItem(int code)
 {
     struct items currentItem;
@@ -628,14 +718,13 @@ void printItem(int code)
     }
     fclose(fp);
 }
-
-
+//To show a receipt of a specific code
 void viewReceipt()
 {
   printf("Enter receipt code:\n");
   char rcode[50];
   scanf("%s",rcode);
-  int hits=0;
+  int hits=0;//Function to store number of matches
   FILE *receiptFile=fopen("receipts.dat","r");
   struct receipts currentReceipt;
   while(fread(&currentReceipt,sizeof(struct receipts),1,receiptFile))
@@ -643,7 +732,6 @@ void viewReceipt()
     if(strcmp(currentReceipt.receiptCode,rcode)==0)
     {
         hits++;
-        //printf("ItemCode: %s \n",currentReceipt.receiptCode);
         printf("ItemCode: %d \t",currentReceipt.itemCode);
         printf("Amount:%d \t",currentReceipt.amount);
         printf("Item:");
@@ -663,21 +751,20 @@ void viewReceipt()
         {
             viewReceipt();
         }
+        else{
+            clearConsole();
+        }
     }
 }
-
-void openReceipts()
-{
-    char ch;
-    int choice;
-
+//Sub-menu for receipts section
+void openReceipts(){
     printf("Receipts:\n");
     printf("1.Search receipt by code\n");
     printf("2.View all receipts\n");
-    printf("3.Back\n");
-    scanf("%d", &choice);
-
-    switch(choice) {
+    printf("3.Back \n");
+    int rchoice;
+    scanf("%d", &rchoice);
+    switch(rchoice) {
         case 1:
             viewReceipt();
             break;
@@ -686,15 +773,15 @@ void openReceipts()
             break;
         case 3:
             clearConsole();
-            break;
+        break;
         default:
             printf("Invalid choice! Please try again.");
             clearConsole();
-            break;
+            openReceipts();
+        break;
     }
-    printf("\n");
 }
-
+//To show all receipts in the receipts data file
 void viewReceipts()
 {
     fileManagement();//To make sure that there is a file to read
@@ -722,7 +809,7 @@ void viewReceipts()
     scanf("%c", &choice);
     clearConsole();
 }
-
+//To update the number of a particular item sold
 void updateSales(int itemCode,int quantity)
 {
     //To reduce the number of items left
@@ -753,7 +840,7 @@ void updateSales(int itemCode,int quantity)
     //To write the new info into the file
     for(int i=0;i<numItems;i++)
     {
-        fwrite(&itemList[i],sizeof(struct items),1,fp);
+        fwrite(&itemList[i],sizeof(struct items),1,fp2);
     }
     free(itemList);
     fclose(fp2);
@@ -762,7 +849,7 @@ void updateSales(int itemCode,int quantity)
     FILE *fp3=fopen("sales.dat","a+");
     position=0;
      struct sales *salesList=malloc(sizeof(struct sales)*numItems);
-     while(fread(&salesList[position],sizeof(struct sales),1,fp))
+     while(fread(&salesList[position],sizeof(struct sales),1,fp3))
     {
         if(salesList[position].itemCode==itemCode)
         {
@@ -780,4 +867,168 @@ void updateSales(int itemCode,int quantity)
     }
     free(salesList);
     fclose(fp4);
+}
+//Sub-menu for reports section
+void reports()
+{
+    int reportSchoice;
+    while(reportSchoice!=5){
+    printf("Reports:\n");
+    printf("1.Get Revenue\n");
+    printf("2.Show Sales\n");
+    printf("3.Show best Selling item \n");
+    printf("4:Restock Alerts \n");
+    printf("5.Back\n");
+    getchar();
+    scanf("%d", &reportSchoice);
+    switch(reportSchoice) {
+        case 1:
+            clearConsole();
+            getRevenue();
+            break;
+        case 2:
+            clearConsole();
+            showSales();
+            break;
+        case 3:
+            clearConsole();
+            bestSelling();
+            break;
+        case 4:
+            clearConsole();
+            restockAlerts();
+            break;
+        case 5:
+            clearConsole();
+            break;
+        default:
+            printf("Invalid choice! Please try again.");
+            clearConsole();
+            reports();
+        break;
+    }
+    }
+}
+//To get how much money has been generated by the business
+void getRevenue()
+{
+ //To ask for tax %
+ float taxRate;
+ printf("What is the current tax rate?(Percentage): ");
+ scanf("%f",&taxRate);
+ printf("\t\t Sales Sofar \n");
+ //To calculate Revenue plus taxes
+  FILE *fp3=fopen("sales.dat","r");
+  float totalRevenue=0.00,taxes,netProfit,investment=0.00;
+    struct sales salesList;
+    while(fread(&salesList,sizeof(struct sales),1,fp3))
+    {
+      printf("ItemCode:%d \t",salesList.itemCode);
+      printf("Item name:");
+      printItem(salesList.itemCode);
+      printf("\tUnits Sold:%d \t",salesList.unitsSold);
+      printf("Value:%.2f \n",salesList.value);
+      totalRevenue+=salesList.value;
+      investment+=(getBuyingPrice(salesList.itemCode)*salesList.unitsSold);//Cost of buying the specific goods
+    }
+    fclose(fp3);
+    taxes=(taxRate/100)*totalRevenue;//To calculate the taxes due
+    netProfit=totalRevenue-(taxes+investment);//Calculate net profit
+    printf("Total Revenue: %.2f \n",totalRevenue);
+    printf("Taxes(%.2f %):%.2f \n",taxRate,taxes);
+    printf("Capital Used:%.2f \n",investment);
+    printf("Net Profit:%.2f \n\n",netProfit);
+}
+//Code to get the buying price of a certain item
+float getBuyingPrice(int itemCode)
+{
+    float buyingPrice;
+    struct items currentItem;
+    FILE *fp=fopen("stock.dat","r");
+    while(fread(&currentItem,sizeof(struct items),1,fp))
+    {
+        if(currentItem.itemCode==itemCode)
+        {
+            buyingPrice=currentItem.buyingPrice/currentItem.amount;
+        }
+    }
+    fclose(fp);
+    return buyingPrice;
+}
+//To show sales made
+void showSales()
+{
+    FILE *fp3=fopen("sales.dat","r");
+    struct sales salesList;
+    while(fread(&salesList,sizeof(struct sales),1,fp3))
+    {
+      printf("$$$$$$$$$$$$$$$$$$$$$$$\n");
+      printf("ItemCode: %d \n",salesList.itemCode);
+      printf("Item name: ");
+      printItem(salesList.itemCode);
+      printf("\nUnits Sold: %d \n",salesList.unitsSold);
+      printf("Total Value of units Sold: %.2f \n",salesList.value);
+    }
+    fclose(fp3);
+    printf("\n\n");
+}
+//To get the best-selling item in the business
+void bestSelling()
+{
+    int counted=0;//Variable to store how many items have been processed
+    int highestSale=0;//To test for the best selling item
+    char filename[]="sales.dat";//The name of the file to open
+    FILE *fp=fopen(filename,"r");//To open the file
+    struct sales current;//A structure to store data in the file
+    struct sales bestSelling;//To store data about the highest selling item
+    while(fread(&current,sizeof(struct sales),1,fp))//To read the file
+    {
+        counted++;
+        //
+        if(current.unitsSold>highestSale)//If it is the highest selling name
+        {
+            highestSale=current.unitsSold;
+            bestSelling.itemCode=current.itemCode;
+            bestSelling.price=current.price;
+            bestSelling.unitsSold=current.unitsSold;
+            bestSelling.value=current.unitsSold*current.value;
+        }
+        //
+    }
+    fclose(fp);//To close the file and prevent memory leak
+    //To print the items to the screen
+    if(counted>1){
+    printf("Highest selling Item:\n");
+    printf("Item Code: %d \n",bestSelling.itemCode);
+    printf("Item name:");printItem(bestSelling.itemCode);printf("\n");
+    printf("Items Sold: %d\n",bestSelling.unitsSold);
+    printf("Value Sold: %.2f\n",bestSelling.value);
+    }
+    else{
+        printf("No sales have been made yet ! \n");
+    }
+    printf("\n\n");
+}
+//To advice shopkeeper to restock items that may be depeleted
+void restockAlerts()
+{
+ int hits=0;//Variable to store how many items have been processed
+ FILE *fp=fopen("stock.dat","r");
+ struct items itemList;
+    while(fread(&itemList,sizeof(struct items),1,fp))
+    {
+       if(itemList.amount<=2)//If items left are less than or equal to 2
+       {
+
+           hits++;
+           printf("ItemCode:%d \t",itemList.itemCode);
+           printf("ItemName: %s \t",itemList.itemName);
+           printf("Units left: %d \n\n",itemList.amount);
+       }
+    }
+    fclose(fp);
+    if(hits==0)
+    {
+        printf("Looks like the inventory is still healthy! \n\n");
+    }
 }
